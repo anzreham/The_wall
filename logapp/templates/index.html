@@ -7,7 +7,7 @@
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <style>
-* { outline: 1px dotted red; }
+
 div.container{
     width: 800px;
     padding: 30px;
@@ -30,7 +30,27 @@ div.content{
 form{
     width: 330px;
 }
+
+.error{
+          outline: 1px solid red;
+      }   
     </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script>
+    $(document).ready(function(){
+        $('#myForm input[type="text"]').blur(function(){
+            if(!$(this).val()){
+                $(this).addClass("error");
+            } else{
+                $(this).removeClass("error");
+            }
+        });
+    });
+    </script>
+
+
 </head>
 <body>
     <nav class="navbar navbar-light bg-dark">
@@ -39,11 +59,11 @@ form{
  <div class="container">
 
     <div class="content">
-        <form action="register" method="post">
+        <form action="register" method="post"  id ="myForm">
             {% csrf_token %}
             <div class="form-group">
                 <label for="">firstname</label>
-                <input type="text" class="form-control" id="" placeholder="firstname" name = "firstname">
+                <input type="text" class="form-control" id="firstname" placeholder="firstname" name = "firstname">
               </div>
               <div class="form-group">
                 <label for="">lastname</label>
@@ -51,9 +71,12 @@ form{
               </div>
             <div class="form-group">
               <label for="exampleInputEmail1">Email address</label>
-              <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter email" name="email">
+              <input type="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="Enter email" name="email">
               <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
             </div>
+            <label for="RelaseDate">  Birthday:</label>
+            <input type="date" id="date" name="birthday">
+
             <div class="form-group">
               <label for="exampleInputPassword1">Password</label>
               <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password" name="pass">
@@ -66,6 +89,48 @@ form{
 
             <button type="submit" class="btn btn-primary">Submit</button>
           </form>
+
+
+          {% block javascript %}
+   <script>
+      $(document).ready(function(){
+        $("#email").change(function(){
+        var email = $(this).val() ;
+
+
+      $.ajax({
+     csrfmiddlewaretoken: document.getElementsByName('csrfmiddlewaretoken')[0].value,
+
+                        url: 'emailvalidate',
+                        data: {
+                                'email' : email
+                               },
+                        type: 'POST',
+                        dataType : 'json',
+                        success: function(data){
+                          if ( data.is_taken){
+               alert("this email alresy is taken");
+                                    }
+                            console.log(data);
+                        }
+                    });
+
+
+                  });
+
+
+
+                     });
+     
+   
+
+
+      </script>
+          {% endblock javascript %}
+
+
+
+
           {% if messages %}
           <ul class="messages">    
               {% for message in messages %}    
@@ -81,7 +146,7 @@ form{
     {% csrf_token %}
             <div class="form-group">
               <label for="exampleInputEmail1">Email address</label>
-              <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter email" name="email">
+              <input type="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="Enter email" name="email">
               <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
             </div>
             <div class="form-group">
@@ -96,5 +161,8 @@ form{
 
 
  </div>  
+
+ 
 </body>
+
 </html>

@@ -8,5 +8,9 @@ urlpatterns = [
         path('logout', views.logout),
         path('addmessage', views.addmessage),
         path('addcomment/<str:id>', views.addcomment),
+        path('emailvalidate', views.emailvalidate),
+        
+
+
 
 ]

@@ -1,43 +1,58 @@
 from django.shortcuts import render, HttpResponse, redirect
+from django.http import JsonResponse
 from django.contrib import messages
 from .models import User, Message, Comment
 import bcrypt
+from django.views.decorators.csrf import csrf_exempt
 
 def index(request):
     return render(request,'index.html')
 def success(request):
         # login status check
-    if request.session["login_user"]["status"]:
-        this_user = User.objects.get(id=request.session["login_user"]["login_id"])
-        allmessages = Message.objects.all()
-        context = {
-            "first_name" : this_user.firstname,
-            "last_name" : this_user.lastname,
-            "objs"        : allmessages,
-        }
-        return render(request, "success.html", context)
-    
-    else:
-        messages.error(request, "Login error", extra_tags = "login_error")
-        redirect("/")
+    try:
+        if request.session["login_user"]["status"]:
+            this_user = User.objects.get(id=request.session["login_user"]["login_id"])
+            allmessages = Message.objects.all().order_by("-created_at") 
+            context = {
+                "first_name" : this_user.firstname,
+                "last_name" : this_user.lastname,
+                "objs"        : allmessages,
+            }
+            return render(request, "success.html", context)
+        
+        else:
+            messages.error(request, "Login error")
+            return redirect("/")
 
-    return render(request,'success.html',context )
+        return render(request,'success.html',context )
+    except:
+         return redirect("/")
+ 
+@csrf_exempt  
+def emailvalidate(request):
+    is_taken =User.objects.filter(email=request.POST['email']).exists()
+    data = {'is_taken': is_taken}
+    return JsonResponse(data)
 
 
+@csrf_exempt
 def register(request):
-    errors = User.objects.basic_validator(request.POST)
+    if request.method == 'POST':
+        email =  request.POST['email']
+        errors = User.objects.basic_validator(request.POST)
 
-    if len(errors) > 0:
-        for key, value in errors.items():
-            messages.error(request, value)
-        return redirect('/')
-    else:
-        password = request.POST["pass"]
-        pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-        User.objects.create(firstname = request.POST['firstname'], lastname =request.POST['lastname'], email = request.POST['email'], password  = pw_hash)
-        request.session["login_user"] = { "status": True, "login_id": User.objects.get(email=request.POST["email"]).id }
-      
-        return redirect("/success")
+        if len(errors) > 0:
+            for key, value in errors.items():
+                messages.error(request, value)
+            return redirect('/')
+        else:
+            password = request.POST["pass"]
+            pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+            User.objects.create(firstname = request.POST['firstname'], lastname =request.POST['lastname'], email = email,
+            birthday=request.POST['birthday'] , password  = pw_hash)
+            request.session["login_user"] = { "status": True, "login_id": User.objects.get(email=request.POST["email"]).id }
+            print(" added to database")
+            return redirect("/success")
 
 def log(request):
     
